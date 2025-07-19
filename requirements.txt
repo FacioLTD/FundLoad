@@ -1,0 +1,19 @@
+# Core dependencies for Fund Load Adjudication System
+# By Uriel Aharoni - Legendary FinTech Architect
+
+# API Framework (optional - for REST API usage)
+fastapi>=0.100.0
+uvicorn>=0.20.0
+
+# Data validation and serialization
+pydantic>=2.0.0
+
+# File upload handling (for API)
+python-multipart>=0.0.6
+
+# Development dependencies (install with pip install -e ".[dev]")
+# pytest>=7.0.0
+# pytest-cov>=4.0.0
+# black>=23.0.0
+# isort>=5.12.0
+# mypy>=1.0.0

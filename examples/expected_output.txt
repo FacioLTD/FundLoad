@@ -1,0 +1,10 @@
+{"id":"15337","customer_id":"999","accepted":true}
+{"id":"34781","customer_id":"343","accepted":true}
+{"id":"26440","customer_id":"222","accepted":true}
+{"id":"12394","customer_id":"133","accepted":false}
+{"id":"15689","customer_id":"445","accepted":true}
+{"id":"32551","customer_id":"264","accepted":true}
+{"id":"27446","customer_id":"328","accepted":true}
+{"id":"2","customer_id":"999","accepted":false}
+{"id":"3","customer_id":"999","accepted":false}
+{"id":"4","customer_id":"999","accepted":true} 
