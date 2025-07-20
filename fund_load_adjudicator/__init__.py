@@ -1,6 +1,6 @@
 """
 Fund Load Adjudication System
-By Uriel Aharoni - Legendary FinTech Architect
+By Uriel Aharoni
 
 A modular, production-ready system for processing fund load transactions
 according to velocity limits and business rules.
