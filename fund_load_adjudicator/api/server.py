@@ -467,6 +467,7 @@ async def get_outputs(db: Session = Depends(get_db)):
             
             grouped_outputs[output.process_id]['outputs'].append({
                 'id': output.transaction_id,
+                'time': output.transaction_time,
                 'customer_id': output.customer_id,
                 'accepted': output.accepted,
                 'audit': {

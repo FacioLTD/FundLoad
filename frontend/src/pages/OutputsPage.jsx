@@ -207,6 +207,8 @@ export default function OutputsPage({ density = 'comfortable' }) {
   const [config, setConfig] = useState(null);
   const [configLastRefreshed, setConfigLastRefreshed] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [transactionPage, setTransactionPage] = useState(1);
+  const [transactionsPerPage, setTransactionsPerPage] = useState(10);
 
   // Fetch configuration from backend and return it
   const fetchConfigAndReturn = async () => {
@@ -262,6 +264,11 @@ export default function OutputsPage({ density = 'comfortable' }) {
       setSavedOutputs([]);
     }
   };
+  
+  // Reset transaction page when expanded event changes or search term changes
+  useEffect(() => {
+    setTransactionPage(1);
+  }, [expandedEventId, searchTerm]);
 
   useEffect(() => {
     fetchConfigAndReturn();
@@ -865,21 +872,32 @@ export default function OutputsPage({ density = 'comfortable' }) {
                             <TableCell sx={{ color: '#00fff7' }}>ID</TableCell>
                             <TableCell sx={{ color: '#00fff7' }}>Customer ID</TableCell>
                             <TableCell sx={{ color: '#00fff7' }}>Amount</TableCell>
+                            <TableCell sx={{ color: '#00fff7' }}>Date</TableCell>
                             <TableCell sx={{ color: '#00fff7' }}>Accepted</TableCell>
                             <TableCell sx={{ color: '#00fff7' }}>Rules Violated</TableCell>
                             <TableCell sx={{ color: '#00fff7' }}>Audit Details</TableCell>
                           </TableRow>
                         </TableHead>
                         <TableBody>
-                          {(event.outputs || [])
-                            .filter(row => {
-                              if (!searchTerm) return true;
-                              const searchLower = searchTerm.toLowerCase();
-                              return (
-                                (row.id && row.id.toString().toLowerCase().includes(searchLower)) ||
-                                (row.customer_id && row.customer_id.toString().toLowerCase().includes(searchLower))
-                              );
-                            })
+                          {(() => {
+                            // Filter outputs based on search term
+                            const filteredOutputs = (event.outputs || [])
+                              .filter(row => {
+                                if (!searchTerm) return true;
+                                const searchLower = searchTerm.toLowerCase();
+                                return (
+                                  (row.id && row.id.toString().toLowerCase().includes(searchLower)) ||
+                                  (row.customer_id && row.customer_id.toString().toLowerCase().includes(searchLower))
+                                );
+                              });
+                            
+                            // Calculate pagination
+                            const startIndex = (transactionPage - 1) * transactionsPerPage;
+                            const endIndex = startIndex + transactionsPerPage;
+                            const paginatedOutputs = filteredOutputs.slice(startIndex, endIndex);
+                            
+                            return paginatedOutputs;
+                          })()
                             .map((row, idx) => {
                             const auditDetails = row.audit || {};
                             const rulesEvaluated = auditDetails.rules_evaluated || {};
@@ -937,6 +955,9 @@ export default function OutputsPage({ density = 'comfortable' }) {
                                 <TableCell sx={{ color: '#fff' }}>
                                   ${formatAmount(effectiveAmount)}
                                   {auditDetails.is_monday && <Chip size="small" label="Monday" sx={{ ml: 1, bgcolor: '#ff9800', color: '#fff', fontSize: '0.7rem' }} />}
+                                </TableCell>
+                                <TableCell sx={{ color: '#fff' }}>
+                                  {formatEventDate(row.time)}
                                 </TableCell>
                                 <TableCell sx={{ color: row.accepted ? '#00e676' : '#ff1744', fontWeight: 700 }}>
                                   {row.accepted ? 'Yes' : 'No'}
@@ -1027,6 +1048,54 @@ export default function OutputsPage({ density = 'comfortable' }) {
                         </TableBody>
                       </Table>
                     </TableContainer>
+                      
+                    {/* Add pagination for transactions table */}
+                    {(() => {
+                      const filteredOutputs = (event.outputs || [])
+                        .filter(row => {
+                          if (!searchTerm) return true;
+                          const searchLower = searchTerm.toLowerCase();
+                          return (
+                            (row.id && row.id.toString().toLowerCase().includes(searchLower)) ||
+                            (row.customer_id && row.customer_id.toString().toLowerCase().includes(searchLower))
+                          );
+                        });
+                        
+                      const totalTransactions = filteredOutputs.length;
+                      const totalPages = Math.ceil(totalTransactions / transactionsPerPage);
+                        
+                      return totalTransactions > 0 ? (
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2, mb: 1 }}>
+                          <Typography variant="body2" sx={{ color: '#ccc' }}>
+                            Showing {Math.min(transactionsPerPage, totalTransactions)} of {totalTransactions} transactions
+                          </Typography>
+                          <Stack direction="row" spacing={2} alignItems="center">
+                            <Typography sx={{ color: '#00fff7', fontWeight: 600 }}>Rows per page:</Typography>
+                            <Select
+                              value={transactionsPerPage}
+                              onChange={e => { 
+                                setTransactionsPerPage(Number(e.target.value)); 
+                                setTransactionPage(1); 
+                              }}
+                              size="small"
+                              sx={{ color: '#00fff7', borderColor: '#00fff7', minWidth: 80, background: '#18181b', '& .MuiSelect-icon': { color: '#00fff7' } }}
+                            >
+                              {[5, 10, 25, 50].map(opt => (
+                                <MenuItem key={opt} value={opt}>{opt}</MenuItem>
+                              ))}
+                            </Select>
+                            <Pagination
+                              count={totalPages}
+                              page={transactionPage}
+                              onChange={(_, val) => setTransactionPage(val)}
+                              color="primary"
+                              size="small"
+                              sx={{ '& .MuiPaginationItem-root': { color: '#00fff7' } }}
+                            />
+                          </Stack>
+                        </Box>
+                      ) : null;
+                    })()}
                   </Box>
                 </Collapse>
               </Box>
