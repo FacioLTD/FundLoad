@@ -20,7 +20,7 @@ This document explains the test cases in `comprehensive_test.txt` and which spec
 - 4 transactions of $1,000 each on the same day (July 20, 2025)
 - Tests: **Daily Load Count** (Maximum 3 load attempts per customer per day)
 - Expected outcome: First 3 transactions accepted, 4th transaction rejected
-- Transaction IDs: 1007, 1008, 1009, 1010
+- Transaction IDs: 1072, 1008, 1092, 1010
 
 ### Customer 1004 (Weekly Limit Test)
 - $3,000 per day for 8 consecutive days (July 14-21, 2025)
@@ -74,7 +74,7 @@ This document explains the test cases in `comprehensive_test.txt` and which spec
 - 4 transactions of $1 each on the same day (July 20, 2025)
 - Tests: **Daily Load Count** with minimal amounts
 - Expected outcome: First 3 transactions accepted, 4th transaction rejected
-- Transaction IDs: 1047, 1048, 1049, 1050
+- Transaction IDs: 1470, 1480, 1490, 1500
 
 ### Customer 1013 (Weekly Limit Edge Case)
 - $20,000 in 4 days (July 14–17, 2025), $5k at the end of the week, and $5k a day later

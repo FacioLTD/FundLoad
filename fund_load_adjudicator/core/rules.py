@@ -270,24 +270,20 @@ class PrimeIdRule:
             lambda: defaultdict(int)
         )
     
-    def evaluate(self, transaction_id: str, date: str, amount: Decimal) -> RuleResult:
+    def evaluate(self, customer_id: str, date: str, amount: Decimal) -> RuleResult:
         """
         Evaluate prime ID rules.
         
         Args:
-            transaction_id: Transaction ID to check
+            customer_id: Customer identifier
             date: Transaction date (YYYY-MM-DD)
             amount: Transaction amount
             
         Returns:
             RuleResult with evaluation outcome
         """
-        # Check if ID is prime
-        if not PrimeNumberChecker.is_prime(transaction_id):
-            return RuleResult(passed=True, reason="NOT_PRIME_ID")
-        
         # Check daily count limit
-        current_count = self.prime_id_daily_counts[transaction_id][date]
+        current_count = self.prime_id_daily_counts[customer_id][date]
         if current_count >= self.daily_count:
             return RuleResult(
                 passed=False,
@@ -296,7 +292,7 @@ class PrimeIdRule:
             )
         
         # Check daily amount limit
-        current_total = self.prime_id_daily_totals[transaction_id][date]
+        current_total = self.prime_id_daily_totals[customer_id][date]
         new_total = current_total + amount
         
         if new_total > self.daily_limit:
@@ -320,11 +316,10 @@ class PrimeIdRule:
             }
         )
     
-    def record_transaction(self, transaction_id: str, date: str, amount: Decimal) -> None:
+    def record_transaction(self, customer_id: str, date: str, amount: Decimal) -> None:
         """Record accepted prime ID transaction."""
-        if PrimeNumberChecker.is_prime(transaction_id):
-            self.prime_id_daily_totals[transaction_id][date] += amount
-            self.prime_id_daily_counts[transaction_id][date] += 1
+        self.prime_id_daily_totals[customer_id][date] += amount
+        self.prime_id_daily_counts[customer_id][date] += 1
 
 
 class RuleEngine:
@@ -372,14 +367,23 @@ class RuleEngine:
         Returns:
             Dictionary of rule results
         """
-        return {
-            'daily_limit': self.daily_limit_rule.evaluate(customer_id, date, amount),
-            'daily_count': self.daily_count_rule.evaluate(customer_id, date),
-            'weekly_limit': self.weekly_limit_rule.evaluate(customer_id, transaction_date, amount),
-            'prime_id': self.prime_id_rule.evaluate(transaction_id, date, amount),
-            'anomaly': self.anomaly_rule.evaluate(customer_id, transaction_id),
-        }
-    
+        if not PrimeNumberChecker.is_prime(transaction_id):
+            return {
+                'daily_limit': self.daily_limit_rule.evaluate(customer_id, date, amount),
+                'daily_count': self.daily_count_rule.evaluate(customer_id, date),
+                'weekly_limit': self.weekly_limit_rule.evaluate(customer_id, transaction_date, amount),
+                'prime_id': RuleResult(passed=True, reason="NOT_PRIME_ID"),
+                'anomaly': self.anomaly_rule.evaluate(customer_id, transaction_id),
+            }
+        else:
+            return {
+                'daily_limit': RuleResult(passed=True, reason="PRIME_ID"),
+                'daily_count': RuleResult(passed=True, reason="PRIME_ID"),
+                'weekly_limit': self.weekly_limit_rule.evaluate(customer_id, transaction_date, amount),
+                'prime_id': self.prime_id_rule.evaluate(customer_id, date, amount),
+                'anomaly': self.anomaly_rule.evaluate(customer_id, transaction_id),
+            }
+
     def record_accepted_transaction(
         self, 
         customer_id: str, 
@@ -399,5 +403,5 @@ class RuleEngine:
         self.daily_limit_rule.record_transaction(customer_id, date, amount)
         self.daily_count_rule.record_transaction(customer_id, date)
         self.weekly_limit_rule.record_transaction(customer_id, date, amount)
-        self.prime_id_rule.record_transaction(transaction_id, date, amount)
+        self.prime_id_rule.record_transaction(customer_id, date, amount)
         self.anomaly_rule.record_transaction(customer_id, transaction_id) 
