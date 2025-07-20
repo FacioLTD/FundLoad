@@ -43,7 +43,7 @@ class AmountParser:
         if not match:
             raise ValueError(f'Malformed amount string: {amount_str}')
         
-        return Decimal(match.group()).quantize(Decimal('0.01'))
+        return Decimal(cleaned).quantize(Decimal('0.01'))
 
 
 class PrimeNumberChecker:

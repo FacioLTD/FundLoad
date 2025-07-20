@@ -62,8 +62,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Global processor instance
-processor = FundProcessor()
+# Global processor instance (will be initialized with database session)
+processor = None
 
 # Database dependency
 def get_db():
@@ -126,6 +126,10 @@ async def process_file(file: UploadFile = File(...), db: Session = Depends(get_d
         ZIP file containing output.txt and audit.txt
     """
     try:
+        # Initialize processor with database session for persistence
+        global processor
+        if processor is None:
+            processor = FundProcessor(db_session=db)
         # Validate file type
         if not file.filename or not file.filename.endswith(('.txt', '.jsonl', '.json', '.csv')):
             raise HTTPException(
@@ -150,13 +154,25 @@ async def process_file(file: UploadFile = File(...), db: Session = Depends(get_d
             # Process the file
             results = processor.process_file(temp_file_path)
             
-            # Create output.txt (simple format)
+            # Create output.txt (JSON format for frontend table)
             output_lines = []
             for result in results:
-                status = "ACCEPTED" if result.accepted else "REJECTED"
-                output_lines.append(f"{result.id},{result.customer_id},{result.original_amount},{status}")
+                output_line = {
+                    'id': result.id,
+                    'customer_id': result.customer_id,
+                    'accepted': result.accepted
+                }
+                output_lines.append(json.dumps(output_line, separators=(',', ':')))
             
-            output_content = "\n".join(output_lines)
+            output_content = "\n".join(output_lines) + "\n"
+            
+            # Also create a CSV version for compatibility
+            csv_lines = []
+            for result in results:
+                status = "ACCEPTED" if result.accepted else "REJECTED"
+                csv_lines.append(f"{result.id},{result.customer_id},{result.original_amount},{status}")
+            
+            csv_content = "\n".join(csv_lines) + "\n"
             
             # Create audit.txt (JSONL format)
             audit_lines = []
@@ -208,6 +224,7 @@ async def process_file(file: UploadFile = File(...), db: Session = Depends(get_d
             with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
                 zip_file.writestr('output.txt', output_content)
                 zip_file.writestr('audit.txt', audit_content)
+                zip_file.writestr('output.csv', csv_content)  # Add CSV for compatibility
             
             zip_buffer.seek(0)
             
@@ -233,7 +250,12 @@ async def process_file(file: UploadFile = File(...), db: Session = Depends(get_d
 @app.get("/api/v1/config")
 async def get_configuration():
     """Get current system configuration."""
-    config = processor.config
+    if processor is None:
+        # Initialize with default config if processor not initialized
+        temp_processor = FundProcessor()
+        config = temp_processor.config
+    else:
+        config = processor.config
     return {
         "daily_limit": str(config.daily_limit),
         "weekly_limit": str(config.weekly_limit),

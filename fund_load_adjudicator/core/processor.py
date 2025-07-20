@@ -8,6 +8,7 @@ import csv
 import sys
 from typing import Iterator, List, Dict, Any
 from pathlib import Path
+from decimal import Decimal
 
 from .models import Transaction, ProcessingResult, Configuration
 from .rules import RuleEngine
@@ -22,16 +23,113 @@ class FundProcessor:
     Designed for both simple file processing and API integration.
     """
     
-    def __init__(self, config: Configuration = None):
+    def __init__(self, config: Configuration = None, db_session = None):
         """
         Initialize processor with configuration.
         
         Args:
             config: System configuration (uses default if None)
+            db_session: Database session for persistence (optional)
         """
         self.config = config or Configuration.default()
         self.rule_engine = RuleEngine(self.config)
         self.monday_multiplier = MondayMultiplier(self.config.monday_multiplier)
+        self.db_session = db_session
+        
+        # Load existing transaction history from database if available
+        if self.db_session:
+            self._load_transaction_history()
+    
+    def _load_transaction_history(self):
+        """Load existing transaction history from database into rule engines."""
+        try:
+            from fund_load_adjudicator.api.server import ProcessedOutput
+            
+            # Get all accepted transactions from database
+            accepted_transactions = self.db_session.query(ProcessedOutput).filter(
+                ProcessedOutput.accepted == True
+            ).all()
+            
+            # Replay transactions into rule engines
+            for db_transaction in accepted_transactions:
+                # Parse the transaction date
+                from datetime import datetime
+                transaction_date = datetime.fromtimestamp(db_transaction.timestamp)
+                date_str = transaction_date.strftime('%Y-%m-%d')
+                
+                # Record in rule engines
+                self.rule_engine.record_accepted_transaction(
+                    customer_id=db_transaction.customer_id,
+                    transaction_id=db_transaction.transaction_id,
+                    date=date_str,
+                    amount=Decimal(db_transaction.effective_amount.replace('$', ''))
+                )
+                
+        except Exception as e:
+            # If database loading fails, continue with empty state
+            print(f"Warning: Could not load transaction history: {e}")
+    
+    def _is_transaction_processed(self, transaction_id: str) -> bool:
+        """Check if a transaction has already been processed."""
+        if not self.db_session:
+            return False
+            
+        try:
+            from fund_load_adjudicator.api.server import ProcessedOutput
+            
+            # Check if transaction exists in database
+            existing = self.db_session.query(ProcessedOutput).filter(
+                ProcessedOutput.transaction_id == transaction_id
+            ).first()
+            
+            return existing is not None
+            
+        except Exception as e:
+            # If database check fails, assume not processed
+            print(f"Warning: Could not check transaction history: {e}")
+            return False
+    
+    def _read_and_sort_transactions(self, input_path: str, file_format: str) -> List[Transaction]:
+        """Read transactions from file and sort by timestamp."""
+        transactions = []
+        
+        if file_format == 'csv':
+            # Read CSV file
+            with open(input_path, 'r', newline='') as input_file:
+                csv_reader = csv.reader(input_file)
+                headers = next(csv_reader)  # Read header row
+                
+                for line_num, row in enumerate(csv_reader, 2):
+                    if not row or all(not cell.strip() for cell in row):
+                        continue
+                    
+                    try:
+                        transaction_data = self._parse_csv_line(','.join(row), headers)
+                        transaction = Transaction(**transaction_data)
+                        transactions.append(transaction)
+                    except Exception as e:
+                        print(f"Warning: Skipping invalid CSV line {line_num}: {e}")
+                        continue
+        else:
+            # Read JSONL file
+            with open(input_path, 'r') as input_file:
+                for line_num, line in enumerate(input_file, 1):
+                    line = line.strip()
+                    if not line:
+                        continue
+                    
+                    try:
+                        transaction_data = json.loads(line)
+                        transaction = Transaction(**transaction_data)
+                        transactions.append(transaction)
+                    except Exception as e:
+                        print(f"Warning: Skipping invalid JSON line {line_num}: {e}")
+                        continue
+        
+        # Sort transactions by timestamp
+        transactions.sort(key=lambda t: DateUtils.parse_timestamp(t.time))
+        
+        return transactions
     
     def process_transaction(self, transaction: Transaction) -> ProcessingResult:
         """
@@ -43,6 +141,20 @@ class FundProcessor:
         Returns:
             ProcessingResult with outcome and details
         """
+        # Check if transaction has already been processed
+        if self._is_transaction_processed(transaction.id):
+            return ProcessingResult(
+                id=transaction.id,
+                customer_id=transaction.customer_id,
+                accepted=False,
+                original_amount=transaction.load_amount,
+                effective_amount=transaction.load_amount,
+                is_monday=False,
+                rules_evaluated={'duplicate': {'passed': False, 'reason': 'TRANSACTION_ALREADY_PROCESSED'}},
+                time=transaction.time,
+                error="Transaction has already been processed"
+            )
+        
         try:
             # Parse amount and apply Monday multiplier
             amount = AmountParser.parse(transaction.load_amount)
@@ -183,50 +295,14 @@ class FundProcessor:
         results = []
         file_format = self._detect_file_format(input_path)
         
-        if file_format == 'csv':
-            # Process CSV file
-            with open(input_path, 'r', newline='') as input_file:
-                csv_reader = csv.reader(input_file)
-                headers = next(csv_reader)  # Read header row
-                
-                for line_num, row in enumerate(csv_reader, 2):  # Start from 2 since we read header
-                    if not row or all(not cell.strip() for cell in row):
-                        continue
-                    
-                    try:
-                        # Parse CSV row
-                        transaction_data = self._parse_csv_line(','.join(row), headers)
-                        transaction = Transaction(**transaction_data)
-                        
-                        # Process transaction
-                        result = self.process_transaction(transaction)
-                        results.append(result)
-                        
-                    except Exception as e:
-                        # Re-raise validation errors to stop processing
-                        raise ValueError(f"Validation error on CSV line {line_num}: {e}")
-        else:
-            # Process JSONL file
-            with open(input_path, 'r') as input_file:
-                for line_num, line in enumerate(input_file, 1):
-                    line = line.strip()
-                    if not line:
-                        continue
-                    
-                    try:
-                        # Parse JSON transaction
-                        transaction_data = json.loads(line)
-                        transaction = Transaction(**transaction_data)
-                        
-                        # Process transaction
-                        result = self.process_transaction(transaction)
-                        results.append(result)
-                        
-                    except json.JSONDecodeError as e:
-                        raise ValueError(f"JSON parsing error on line {line_num}: {e}")
-                    except Exception as e:
-                        # Re-raise validation errors to stop processing
-                        raise ValueError(f"Validation error on line {line_num}: {e}")
+        # Read and sort transactions by timestamp
+        transactions = self._read_and_sort_transactions(input_path, file_format)
+        
+        # Process sorted transactions
+        for transaction in transactions:
+            # Process transaction
+            result = self.process_transaction(transaction)
+            results.append(result)
         
         # Write results
         if output_path:
@@ -237,7 +313,7 @@ class FundProcessor:
                         'customer_id': result.customer_id,
                         'accepted': result.accepted
                     }
-                    output_file.write(json.dumps(output_line) + '\n')
+                    output_file.write(json.dumps(output_line, separators=(',', ':')) + '\n')
         else:
             # Write to stdout
             for result in results:
@@ -246,7 +322,7 @@ class FundProcessor:
                     'customer_id': result.customer_id,
                     'accepted': result.accepted
                 }
-                print(json.dumps(output_line))
+                print(json.dumps(output_line, separators=(',', ':')))
         
         return results
     

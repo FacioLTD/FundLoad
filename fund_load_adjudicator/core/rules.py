@@ -260,9 +260,9 @@ class PrimeIdRule:
     """
     
     def __init__(self, daily_limit: Decimal = None, daily_count: int = None):
-        # Hardcode the government regulation requirements
-        self.daily_limit = Decimal("9999.00")  # Maximum $9,999 per day
-        self.daily_count = 1  # Only once per day
+        # Use configuration values or defaults
+        self.daily_limit = daily_limit if daily_limit is not None else Decimal("9999.00")
+        self.daily_count = daily_count if daily_count is not None else 1
         self.prime_id_daily_totals: Dict[str, Dict[str, Decimal]] = defaultdict(
             lambda: defaultdict(Decimal)
         )
@@ -345,7 +345,10 @@ class RuleEngine:
         self.daily_limit_rule = DailyLimitRule(config.daily_limit)
         self.daily_count_rule = DailyCountRule(config.daily_load_count)
         self.weekly_limit_rule = WeeklyLimitRule(config.weekly_limit)
-        self.prime_id_rule = PrimeIdRule()  # Uses hardcoded government regulation values
+        self.prime_id_rule = PrimeIdRule(
+            daily_limit=config.prime_id_daily_limit,
+            daily_count=config.prime_id_daily_count
+        )
         self.anomaly_rule = AnomalyRule(min_customer_id=config.min_customer_id_length, min_transaction_id=config.min_transaction_id_length)
     
     def evaluate_all_rules(

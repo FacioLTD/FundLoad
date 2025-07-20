@@ -6,5 +6,5 @@
 {"id":"32551","customer_id":"264","accepted":true}
 {"id":"27446","customer_id":"328","accepted":true}
 {"id":"2","customer_id":"999","accepted":false}
-{"id":"3","customer_id":"999","accepted":false}
-{"id":"4","customer_id":"999","accepted":true} 
+{"id":"3","customer_id":"999","accepted":true}
+{"id":"4","customer_id":"999","accepted":true}
