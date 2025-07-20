@@ -8,6 +8,9 @@ uvicorn>=0.20.0
 # Data validation and serialization
 pydantic>=2.0.0
 
+# Database ORM
+sqlalchemy>=1.4.0
+
 # File upload handling (for API)
 python-multipart>=0.0.6
 
