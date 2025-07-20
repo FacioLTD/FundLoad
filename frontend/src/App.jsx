@@ -100,12 +100,12 @@ export default function App() {
     // Check if user is already authenticated
     const authHeader = sessionStorage.getItem('authHeader');
     const storedUsername = sessionStorage.getItem('username');
-    
+
     console.log('🔍 APP AUTH CHECK - Auth header present:', !!authHeader);
     console.log('🔍 APP AUTH CHECK - Username present:', !!storedUsername);
     console.log('🔍 APP AUTH CHECK - Auth header value:', authHeader);
     console.log('🔍 APP AUTH CHECK - Username value:', storedUsername);
-    
+
     if (authHeader && storedUsername) {
       console.log('🔍 APP AUTH CHECK - Setting authenticated to true');
       setIsAuthenticated(true);
@@ -150,7 +150,7 @@ export default function App() {
 
   console.log('🔍 APP RENDER - isAuthenticated:', isAuthenticated);
   console.log('🔍 APP RENDER - username:', username);
-  
+
   if (!isAuthenticated) {
     console.log('🔍 APP RENDER - Redirecting to login page');
     return (
