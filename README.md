@@ -297,6 +297,11 @@ This implementation fully satisfies the original challenge requirements:
 
 MIT License - See LICENSE file for details.
 
+## Contributors
+
+- Uriel Aharoni
+- Valentin Ivanenco
+
 ---
 
 *"Damn. Whoever wrote this cared."* - Future developers 
