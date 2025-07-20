@@ -67,8 +67,8 @@ python -m fund_load_adjudicator.api.server
 
 # Start the React frontend (in another terminal)
 cd frontend
-npm install
-npm start
+yarn install
+yarn start
 ```
 
 **Access the web interface at:** `http://localhost:3000`
@@ -107,7 +107,7 @@ pip install -e ".[dev]"
 
 # Install frontend dependencies (for web interface)
 cd frontend
-npm install
+yarn install
 ```
 
 ## Testing
@@ -127,8 +127,8 @@ fund-adjudicator examples/sample_input.txt
 
 # Test the web interface
 cd frontend
-npm test
-npm run build  # Test production build
+yarn test
+yarn run build  # Test production build
 ```
 
 ## Architecture
@@ -232,7 +232,7 @@ processor = FundProcessor(config)
 python -m fund_load_adjudicator.api.server
 
 # Frontend UI (in separate terminal)
-cd frontend && npm start
+cd frontend && yarn start
 ```
 
 ### Docker Deployment
@@ -248,7 +248,7 @@ CMD ["python", "-m", "fund_load_adjudicator.api.server"]
 ### Frontend Build for Production
 ```bash
 cd frontend
-npm run build
+yarn run build
 # Serve the build folder with your web server
 ```
 
