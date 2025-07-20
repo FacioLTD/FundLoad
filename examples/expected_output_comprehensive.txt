@@ -1,0 +1,74 @@
+{"id":"1001","customer_id":"1001","accepted":true}
+{"id":"1002","customer_id":"1001","accepted":true}
+{"id":"1003","customer_id":"1001","accepted":false}
+{"id":"1004","customer_id":"1001","accepted":false}
+
+{"id":"1005","customer_id":"1002","accepted":true}
+{"id":"1006","customer_id":"1002","accepted":false}
+
+{"id":"1072","customer_id":"1003","accepted":true}
+{"id":"1008","customer_id":"1003","accepted":true}
+{"id":"1092","customer_id":"1003","accepted":true}
+{"id":"1010","customer_id":"1003","accepted":false}
+
+{"id":"1011","customer_id":"1004","accepted":true}
+{"id":"1012","customer_id":"1004","accepted":true}
+{"id":"1013","customer_id":"1004","accepted":true}
+{"id":"1014","customer_id":"1004","accepted":true}
+{"id":"1015","customer_id":"1004","accepted":true}
+{"id":"1016","customer_id":"1004","accepted":true}
+{"id":"1017","customer_id":"1004","accepted":false}
+{"id":"1018","customer_id":"1004","accepted":false}
+
+{"id":"2","customer_id":"1005","accepted":true}
+{"id":"3","customer_id":"1005","accepted":false}
+{"id":"5","customer_id":"1005","accepted":false}
+{"id":"7","customer_id":"1005","accepted":false}
+{"id":"11","customer_id":"1005","accepted":false}
+{"id":"13","customer_id":"1005","accepted":false}
+
+{"id":"17","customer_id":"1006","accepted":false}
+{"id":"19","customer_id":"1006","accepted":true}
+
+{"id":"1021","customer_id":"1007","accepted":true}
+{"id":"1022","customer_id":"1007","accepted":false}
+{"id":"1023","customer_id":"1007","accepted":false}
+
+{"id":"1024","customer_id":"1008","accepted":false}
+{"id":"1025","customer_id":"1008","accepted":true}
+{"id":"1026","customer_id":"1008","accepted":true}
+{"id":"1027","customer_id":"1008","accepted":true}
+{"id":"1028","customer_id":"1008","accepted":true}
+{"id":"1029","customer_id":"1008","accepted":true}
+{"id":"1030","customer_id":"1008","accepted":false}
+{"id":"1031","customer_id":"1008","accepted":false}
+
+{"id":"1032","customer_id":"1009","accepted":false}
+{"id":"1033","customer_id":"1009","accepted":true}
+{"id":"1034","customer_id":"1009","accepted":true}
+{"id":"1035","customer_id":"1009","accepted":true}
+{"id":"1036","customer_id":"1009","accepted":true}
+{"id":"1037","customer_id":"1009","accepted":true}
+{"id":"1038","customer_id":"1009","accepted":true}
+{"id":"1039","customer_id":"1009","accepted":false}
+
+{"id":"1040","customer_id":"1010","accepted":true}
+{"id":"1041","customer_id":"1010","accepted":true}
+{"id":"1042","customer_id":"1010","accepted":false}
+
+{"id":"1043","customer_id":"1011","accepted":true}
+{"id":"1044","customer_id":"1011","accepted":false}
+{"id":"1045","customer_id":"1011","accepted":false}
+{"id":"1046","customer_id":"1011","accepted":false}
+
+{"id":"1470","customer_id":"1012","accepted":true}
+{"id":"1480","customer_id":"1012","accepted":true}
+{"id":"1490","customer_id":"1012","accepted":true}
+{"id":"1500","customer_id":"1012","accepted":false}
+
+{"id":"1051","customer_id":"1013","accepted": true}
+{"id":"1052","customer_id":"1013","accepted": true}
+{"id":"1053","customer_id":"1013","accepted": true}
+{"id":"1054","customer_id":"1013","accepted": true}
+{"id":"1055","customer_id":"1013","accepted": false}
+{"id":"1056","customer_id":"1013","accepted": true}

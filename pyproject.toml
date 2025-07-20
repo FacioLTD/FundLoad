@@ -7,7 +7,8 @@ name = "fund-load-adjudicator"
 version = "1.0.0"
 description = "Fund Load Restrictions Processing System - By Uriel Aharoni"
 authors = [
-    {name = "Uriel Aharoni", email = "uriel@example.com"}
+    {name = "Uriel Aharoni", email = "uriel@example.com"},
+    {name = "Valentin Ivanenco", email = "ivadey.dev@gmail.com"}
 ]
 readme = "README.md"
 license = {text = "MIT"}

@@ -141,6 +141,49 @@ class TestFundProcessor:
         assert processor.config.daily_limit == Decimal("5000.00")
         assert processor.config.weekly_limit == Decimal("20000.00")
         assert processor.config.daily_load_count == 3
+        
+    def test_comprehensive_file_processing(self):
+        """Test processing of comprehensive test file."""
+        import os
+        import json
+        
+        processor = FundProcessor()
+        
+        # Get the paths to the test files
+        examples_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'examples')
+        input_file = os.path.join(examples_dir, 'comprehensive_test.txt')
+        expected_output_file = os.path.join(examples_dir, 'expected_output_comprehensive.txt')
+        
+        # Process the input file
+        results = processor.process_file(input_file)
+        
+        # Load the expected output
+        expected_results = []
+        with open(expected_output_file, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line:  # Skip empty lines
+                    expected_results.append(json.loads(line))
+        
+        # Compare the results with the expected output
+        assert len(results) == len(expected_results), f"Expected {len(expected_results)} results, got {len(results)}"
+        
+        # Create dictionaries keyed by transaction ID for easier comparison
+        results_dict = {result.id: result for result in results}
+        expected_dict = {expected['id']: expected for expected in expected_results}
+        
+        # Check that all expected transaction IDs are in the results
+        assert set(results_dict.keys()) == set(expected_dict.keys()), \
+            f"Transaction IDs don't match. Missing: {set(expected_dict.keys()) - set(results_dict.keys())}, " \
+            f"Extra: {set(results_dict.keys()) - set(expected_dict.keys())}"
+        
+        # Compare each transaction result with its expected output
+        for tx_id, expected in expected_dict.items():
+            result = results_dict[tx_id]
+            assert result.customer_id == expected['customer_id'], \
+                f"Transaction {tx_id}: Expected customer_id {expected['customer_id']}, got {result.customer_id}"
+            assert result.accepted == expected['accepted'], \
+                f"Transaction {tx_id}: Expected accepted {expected['accepted']}, got {result.accepted}"
     
     def test_single_transaction_processing(self):
         """Test processing a single transaction."""
